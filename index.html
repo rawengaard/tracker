@@ -192,6 +192,33 @@ table.gt{border-collapse:separate;border-spacing:3px;width:100%}
 .daytools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:2px 0 14px}
 .daytools .linkbtn{display:flex;align-items:center;gap:4px}
 .daytools .linkbtn.danger{color:var(--danger)}
+/* ---- Helse ---- */
+.r1{--rb:#b91c1c;--rt:#fff}.r2{--rb:#f0a04b;--rt:#2b1800}.r3{--rb:#d3dbd9;--rt:#17201e}.r4{--rb:#5cc2b5;--rt:#04211d}.r5{--rb:#0f766e;--rt:#fff}
+.sv1{--rb:#f7c9a8;--rt:#4a1c06}.sv2{--rb:#ec8a4b;--rt:#2b1200}.sv3{--rb:#b43c0a;--rt:#fff}
+.ev1{--rb:#e9defc;--rt:#3b1a8a}.ev2{--rb:#b79cff;--rt:#150b33}.ev3{--rb:#6d28d9;--rt:#fff}
+@media (prefers-color-scheme:dark){
+.r1{--rb:#f87171;--rt:#2e0808}.r2{--rb:#f59e42;--rt:#2b1800}.r3{--rb:#4a5754;--rt:#e8efed}.r4{--rb:#2dd4bf;--rt:#042f2e}.r5{--rb:#0d9488;--rt:#fff}
+.sv1{--rb:#5a3318;--rt:#fde3d3}.sv2{--rb:#c2691f;--rt:#fff}.sv3{--rb:#fb923c;--rt:#2b1200}
+.ev1{--rb:#2c2150;--rt:#e9defc}.ev2{--rb:#7c5cd6;--rt:#fff}.ev3{--rb:#b79cff;--rt:#150b33}}
+.sc{display:grid;grid-template-columns:repeat(var(--n),1fr);gap:6px}
+.sc.n5{--n:5}.sc.n4{--n:4}.sc.n3{--n:3}
+.sc button{min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:2px solid var(--line);border-radius:12px;background:var(--bg);font-size:.68rem;font-weight:600;padding:4px 1px;line-height:1.1;overflow-wrap:anywhere}
+.sc button[aria-pressed=true]{background:var(--rb);border-color:var(--rb);color:var(--rt)}
+.ctitle{font-size:.8rem;font-weight:700;color:var(--muted);margin:12px 0 4px}
+.symrow{margin:8px 0}.symn{font-weight:600;font-size:.92rem;margin-bottom:4px}
+.seg.sm button{min-height:36px;font-size:.82rem}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.chipx{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:.82rem;font-weight:600;background:var(--rb);color:var(--rt)}
+.chipx.r0{background:transparent;border:1px dashed var(--muted);color:var(--muted)}
+.chipt{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:.82rem;font-weight:600;background:var(--gs);color:var(--g)}
+.evrow{display:flex;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:8px 0;min-height:40px;align-items:center;gap:4px;flex-wrap:wrap}
+.evrow .evt{font-weight:600;overflow-wrap:anywhere}
+.hrow{display:flex;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 0;min-height:46px;align-items:center;gap:8px}
+.cell.r1,.cell.r2,.cell.r3,.cell.r4,.cell.r5,.cell.sv1,.cell.sv2,.cell.sv3,.cell.ev1,.cell.ev2,.cell.ev3{background:var(--rb);border-color:var(--rb);color:var(--rt)}
+.cell.r0{border-style:dashed;color:var(--muted)}
+.cell.free{background:var(--hab-soft);border-color:var(--hab-soft);color:var(--hab)}
+.cell svg{display:block}
+
 </style>
 </head>
 <body>
@@ -220,14 +247,59 @@ const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 const longDate = s => { const d = parse(s); return `${DAYN[d.getDay()]} ${d.getDate()}. ${MONTHN[d.getMonth()]}`; };
 const shortDate = s => { const d = parse(s); return `${DAYS3[d.getDay()]} ${d.getDate()}. ${MON3[d.getMonth()]}`; };
 
+/* ---------- Helse: konstanter ---------- */
+const MOOD = ['Veldig dårlig','Dårlig','Nøytral','Bra','Veldig bra'];
+const ENERGY = ['Utmattet','Sliten','Ok','Overskudd'];
+const FOCUS = ['Ufokusert','Litt spredt','Fokusert'];
+const SOCIAL = ['Tappet meg','Slitsomt','Nøytralt','Fint','Ga meg energi'];
+const SYMSEV = ['Ingen','Lett','Middels','Sterk'];
+const symVals = s => s && s.lv === 3 ? [0, 1, 3] : [0, 1, 2, 3];
+const FCATS = ['Avtale','Gjenstand','Oppgave','Lette etter noe','Annet'];
+const CLUSTERS = { pos:{ n:'Positive', c:'green' }, neu:{ n:'Nøytrale', c:'slate' }, neg:{ n:'Krevende', c:'orange' }, pat:{ n:'Mønster', c:'purple' }, sit:{ n:'Sosialt: situasjon', c:'blue' }, sos:{ n:'Sosialt: hvordan det var', c:'teal' } };
+const DEF_TAGS = [['t0','Glad','pos'],['t11','Rolig','pos'],['t2','Motivert','pos'],['t12','Takknemlig','pos'],['t13','Stolt','pos'],
+  ['t3','Nøytral','neu'],['t14','Flat','neu'],['t4','Følsom','neu'],
+  ['t5','Trist','neg'],['t15','Motløs','neg'],['t16','Urolig','neg'],['t9','Stresset','neg'],['t6','Irritabel','neg'],['t7','Frustrert','neg'],['t17','Ensom','neg'],['t18','Skyldfølelse','neg'],
+  ['t10','Humørsvingninger','pat'],['t19','Rastløs','pat'],['t20','Tankekjør','pat'],['t21','Kort lunte','pat'],
+  ['t22','Alene hjemme','sit'],['t23','På jobb med andre','sit'],['t24','Med venner/familie','sit'],
+  ['t25','Hyggelig','sos'],['t26','Strevde med å bidra','sos'],['t27','Pratsom','sos'],['t28','Trakk meg unna','sos'],['t29','Trengte ro','sos'],['t30','Savnet andre','sos']];
+function normHealth(h) {
+  const fresh = !h || typeof h !== 'object'; h = fresh ? {} : h;
+  const o = {
+    v2: true,
+    checkins: (h.checkins && typeof h.checkins === 'object') ? h.checkins : {},
+    events: Array.isArray(h.events) ? h.events : [],
+    symptoms: Array.isArray(h.symptoms) ? h.symptoms : [],
+    tags: Array.isArray(h.tags) ? h.tags : DEF_TAGS.map(([id, name, cl]) => ({ id, name, cl }))
+  };
+  if (!fresh && !h.v2 && Array.isArray(h.tags)) {          /* migrering fra første helseversjon */
+    o.tags = o.tags.filter(t => t.id !== 't1' && t.id !== 't8');
+    const t4 = o.tags.find(t => t.id === 't4'); if (t4 && t4.name === 'Emosjonell') t4.name = 'Følsom';
+    DEF_TAGS.forEach(([id, name, cl]) => { if (!o.tags.some(t => t.id === id) && !o.tags.some(t => t.name.toLowerCase() === name.toLowerCase())) o.tags.push({ id, name, cl }); });
+    Object.keys(o.checkins).forEach(d => {
+      const c = o.checkins[d];
+      if (c.tags) c.tags = c.tags.map(t => t === 't8' ? 't9' : t).filter((t, i, a) => t !== 't1' && a.indexOf(t) === i);
+      if (c.social != null) { if (c.social === 0) delete c.social; else c.social = [0, 1, 2, 4, 5][c.social]; }
+    });
+  }
+  if (!h.v2 && !o.symptoms.some(x => x.name.toLowerCase() === 'kvalme')) o.symptoms.push({ id:'s_kvalme', name:'Kvalme', lv:3 });
+  if (!h.v3) {                                              /* energi: 4 nivåer, kvalme: ingen/lett/sterk */
+    Object.keys(o.checkins).forEach(d => { const c = o.checkins[d]; if (c.energy != null) c.energy = [0, 1, 2, 2, 3, 4][c.energy] || c.energy; });
+    o.symptoms.forEach(x => { if (x.name.toLowerCase() === 'kvalme' && !x.lv) { x.lv = 3; Object.keys(o.checkins).forEach(d => { const sy = o.checkins[d].sym; if (sy && sy[x.id] === 2) sy[x.id] = 3; }); } });
+  }
+  o.v3 = true;
+  return o;
+}
+const rampCls = (v, n) => 'r' + (Math.round((v - 1) / (n - 1) * 4) + 1);
+
 /* ---------- Lagring ---------- */
 const KEY = 'vanelogg.v1';
 let storageOK = true;
-let state = { v:1, activities:[], groups:[], logs:{}, notes:{}, meta:{ lastBackup:null, snoozeUntil:null, remindTime:'20:00' }, prefs:{ range:'week', kind:'bar' } };
+let state = { v:1, activities:[], groups:[], logs:{}, notes:{}, meta:{ lastBackup:null, snoozeUntil:null, remindTime:'20:00' }, prefs:{ range:'week', kind:'bar' }, health: normHealth(null) };
 try {
   const raw = localStorage.getItem(KEY);
   if (raw) { const p = JSON.parse(raw); if (p && Array.isArray(p.activities) && p.logs) state = Object.assign(state, p, { prefs: Object.assign(state.prefs, p.prefs||{}) }); if (!Array.isArray(state.groups)) state.groups = []; if (!state.notes || typeof state.notes !== 'object') state.notes = {}; state.groups.forEach((g, i) => { if (!g.color) g.color = ['teal','blue','purple','pink','orange','green','red','slate'][i % 8]; }); state.meta = Object.assign({ lastBackup:null, snoozeUntil:null, remindTime:'20:00' }, state.meta || {}); }
 } catch(e) { storageOK = false; }
+state.health = normHealth(state.health);
 function save() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) { storageOK = false; }
 }
@@ -317,10 +389,10 @@ function badDay(day) {
   if (!bs.length) return null;
   return { n: bs.reduce((s,a) => s + getCount(a.id, day), 0) };
 }
-const dayHasLog = day => ['logs','notes'].some(k => state[k][day] && Object.keys(state[k][day]).some(id => state.activities.some(a => a.id === id)));
+const dayHasLog = day => ['logs','notes'].some(k => state[k][day] && Object.keys(state[k][day]).some(id => state.activities.some(a => a.id === id))) || !!state.health.checkins[day] || state.health.events.some(e => e.day === day);
 
 /* ---------- UI-tilstand ---------- */
-const ui = { tab:'today', day: todayStr(), offset:0, edit:null, gedit:null, note:null, hide:{} };
+const ui = { tab:'today', day: todayStr(), offset:0, edit:null, gedit:null, note:null, hide:{}, ci:null, ev:null, hl:null, hi:null };
 let lastToday = todayStr();
 
 /* ---------- Ikoner ---------- */
@@ -364,6 +436,59 @@ const nextColor = () => (COLORS.find(c => !state.groups.some(g => g.color === c.
 const gicon = (k, sz = 20) => `<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${(GI[k] || GI.star)[1]}</svg>`;
 
 /* ---------- Visninger ---------- */
+/* ---------- Helse: hjelpere og ikoner ---------- */
+const showHealth = () => state.prefs.showHealth !== false;
+const getCI = day => state.health.checkins[day] || null;
+const ciEmpty = c => !c.mood && !c.energy && !c.focus && c.social == null && !(c.tags && c.tags.length) && !(c.sym && Object.keys(c.sym).length) && !c.note;
+function updCI(day, fn) {
+  const cs = state.health.checkins, ci = cs[day] || (cs[day] = {});
+  fn(ci);
+  if (ci.tags && !ci.tags.length) delete ci.tags;
+  if (ci.sym && !Object.keys(ci.sym).length) delete ci.sym;
+  if (ciEmpty(ci)) delete cs[day];
+  save();
+}
+const evOf = day => state.health.events.filter(e => e.day === day).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+const tagById = id => state.health.tags.find(t => t.id === id);
+const symById = id => state.health.symptoms.find(s => s.id === id);
+const SVGH = (s, body, sw) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw || 1.8}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+const MOUTH = { 1:'M8 16.6q4-4.2 8 0', 2:'M8.6 16q3.4-2.6 6.8 0', 3:'M8.6 15.4h6.8', 4:'M8.6 14q3.4 3 6.8 0', 5:'M7.8 13.2q4.2 5.4 8.4 0' };
+const faceSvg = (k, s = 24) => SVGH(s, `<circle cx="12" cy="12" r="9.5"/><path d="${MOUTH[k]}"/><circle cx="9" cy="9.8" r=".7" fill="currentColor"/><circle cx="15" cy="9.8" r=".7" fill="currentColor"/>`);
+const battSvg = (v, s = 24, mx = 5) => SVGH(s, `<rect x="2" y="7" width="17" height="10" rx="2.2"/><path d="M21.3 10.5v3"/><rect x="4.2" y="9.2" width="${(v / mx * 12.6).toFixed(1)}" height="5.6" rx="1" fill="currentColor" stroke="none"/>`);
+const focusSvg = (v, s = 24) => SVGH(s, v === 1 ? `<circle cx="12" cy="12" r="9.5" stroke-dasharray="2 3.4"/>` : `<circle cx="12" cy="12" r="9.5"/><circle cx="12" cy="12" r="5.2"/>` + (v === 3 ? `<circle cx="12" cy="12" r="1.6" fill="currentColor"/>` : ''));
+const bubbleSvg = (k, s = 24) => SVGH(s, `<path d="M5 4.5h14a2 2 0 0 1 2 2v8.5a2 2 0 0 1-2 2h-7l-5 4v-4H5a2 2 0 0 1-2-2V6.5a2 2 0 0 1 2-2z"/><g transform="translate(0 -3)"><path d="${MOUTH[k]}"/></g><circle cx="9" cy="8.4" r=".7" fill="currentColor"/><circle cx="15" cy="8.4" r=".7" fill="currentColor"/>`);
+const metricDefs = () => [
+  { k:'mood', n:'Humør', cnt:5, lab: v => MOOD[v - 1], ic: v => faceSvg(v, 18), cls: v => rampCls(v, 5) },
+  { k:'energy', n:'Energi', cnt:4, lab: v => ENERGY[v - 1], ic: v => battSvg(v, 18, 4), cls: v => rampCls(v, 4) },
+  { k:'focus', n:'Fokus', cnt:3, lab: v => FOCUS[v - 1], ic: v => focusSvg(v, 18), cls: v => rampCls(v, 3) },
+  { k:'social', n:'Sosialt', cnt:5, lab: v => SOCIAL[v - 1], ic: v => bubbleSvg(v, 18), cls: v => rampCls(v, 5) }
+];
+const fmtAvg = a => a == null ? '–' : (Math.round(a * 10) / 10).toString().replace('.', ',');
+
+function healthCheckinCard(day, isToday) {
+  const ci = getCI(day);
+  let h = `<div class="sect"><h2>Helse</h2></div>`;
+  if (!ci) return h + `<section class="card gcard gc-pink" aria-label="Innsjekk">
+    <div style="font-weight:700">${isToday ? 'Hvordan har du det i dag?' : 'Ingen innsjekk denne dagen'}</div>
+    <div class="muted" style="font-size:.88rem">Humør, energi, fokus og sosialt</div>
+    <button class="btn primary block" style="margin-top:10px" data-act="ci">Sjekk inn</button></section>`;
+  const chips = [];
+  metricDefs().forEach(m => { const v = ci[m.k]; if (v != null) chips.push(`<span class="chipx ${m.cls(v)}">${m.ic(v)} ${m.n}: ${esc(m.lab(v))}</span>`); });
+  (ci.tags || []).forEach(id => { const t = tagById(id); if (t) chips.push(`<span class="chipt gc-${CLUSTERS[t.cl] ? CLUSTERS[t.cl].c : 'slate'}">${esc(t.name)}</span>`); });
+  Object.keys(ci.sym || {}).forEach(id => { const s = symById(id); if (s) chips.push(`<span class="chipx sv${ci.sym[id]}">${esc(s.name)}: ${SYMSEV[ci.sym[id]].toLowerCase()}</span>`); });
+  return h + `<section class="card gcard gc-pink" aria-label="Innsjekk"><div class="chiprow" style="margin-top:0">${chips.join('')}</div>
+    ${ci.note ? `<p class="note" style="margin:8px 0 0"><em>«${esc(ci.note)}»</em></p>` : ''}
+    <button class="btn block" style="margin-top:10px" data-act="ci">Rediger innsjekk</button></section>`;
+}
+function healthForgetCard(day) {
+  const evs = evOf(day);
+  return `<div class="sect"><h2>Glemt og mistet</h2>${evs.length ? `<span class="badge" style="background:var(--gs);color:var(--g)">${evs.length} logget</span>` : ''}</div>
+  <section class="card gcard gc-purple" aria-label="Glemt og mistet">
+    <div class="ghd"><span class="muted" style="font-size:.9rem">Logg når du glemmer eller leter etter noe</span><button class="btn sm" data-act="evnew">+ Logg</button></div>
+    ${evs.map(e => `<button class="evrow" data-act="evedit" data-id="${e.id}" aria-label="Rediger: ${esc(e.text)}"><span class="evt">${esc(e.text)}</span>${e.cat ? `<span class="muted">· ${esc(e.cat)}</span>` : ''}${e.ctx ? `<span class="muted" style="width:100%;font-size:.85rem">${esc(e.ctx)}</span>` : ''}</button>`).join('')}
+  </section>`;
+}
+
 function renderTabs() {
   const t = [['today','I dag',I.today],['trends','Trender',I.trend],['acts','Aktiviteter',I.list]];
   document.getElementById('tabs').innerHTML = t.map(([k,l,ic]) =>
@@ -390,6 +515,7 @@ function renderToday() {
       <p class="muted">Legg til vaner du vil bygge og uvaner du vil holde oversikt over.</p>
       <button class="btn primary block" data-act="newact">Legg til aktivitet</button>
       <button class="btn block" data-act="examples">Prøv med eksempler</button></div>`;
+    if (showHealth()) h += healthCheckinCard(day, isToday) + healthForgetCard(day);
     return h;
   }
   const due = hs.filter(a => isDue(a, day));
@@ -406,6 +532,7 @@ function renderToday() {
       <div><div class="t">${reachedN === due.length ? 'Alt gjort ' + (isToday ? 'i dag' : 'denne dagen') : reachedN + ' av ' + due.length + ' vaner nådd'}</div>
       <div class="s">${reachedN === due.length ? 'Bra jobba!' : (due.length - reachedN) + ' igjen ' + (isToday ? 'i dag' : 'denne dagen')}</div></div></section>`;
   }
+  if (showHealth()) h += healthCheckinCard(day, isToday);
   const noteIcon = a => noteOf(a.id, day) ? '' : `<button class="notebtn io" data-act="note" data-id="${a.id}" aria-label="Legg til notat for ${esc(a.name)}">${I.note}</button>`;
   const noteLine = a => { const n = noteOf(a.id, day); return n ? `<button class="notebtn has" data-act="note" data-id="${a.id}" aria-label="Rediger notat for ${esc(a.name)}">${I.note}<span>${esc(n)}</span></button>` : ''; };
   const habRow = a => {
@@ -446,6 +573,7 @@ function renderToday() {
     const tot = bs.reduce((s,a) => s + getCount(a.id, day), 0);
     h += `<div class="sect"><h2 id="bh">Uvaner</h2><span class="badge bad">${tot} registrert</span></div>` + cards(bs, badRow, 'bad');
   }
+  if (showHealth()) h += healthForgetCard(day);
   h += `<p class="hint">Tips: dobbelttrykk eller hold inne på et navn for +1. Sveip sideveis for å bytte dag.</p>`;
   return h;
 }
@@ -541,6 +669,121 @@ function multiLineSVG(key, series, labels, axis, month, ariaLabel, tips) {
   return o + '</svg>';
 }
 let chartTips = {};
+/* --- Helse i Trender --- */
+function hDayHtml(d) {
+  const ci = getCI(d), evs = evOf(d), M = metricDefs();
+  let parts = [];
+  if (ci) {
+    M.forEach(m => { if (ci[m.k] != null) parts.push(`${m.n}: ${esc(m.lab(ci[m.k]))}`); });
+    const tg = (ci.tags || []).map(id => tagById(id)).filter(Boolean).map(t => esc(t.name));
+    if (tg.length) parts.push('Tagger: ' + tg.join(', '));
+    const sy = Object.keys(ci.sym || {}).map(id => symById(id) ? `${esc(symById(id).name)} ${SYMSEV[ci.sym[id]].toLowerCase()}` : null).filter(Boolean);
+    if (sy.length) parts.push('Symptomer: ' + sy.join(', '));
+    if (ci.note) parts.push(`<em>«${esc(ci.note)}»</em>`);
+  }
+  if (evs.length) parts.push('Glemt og mistet: ' + evs.map(e => esc(e.text) + (e.cat ? ' (' + esc(e.cat) + ')' : '')).join('; '));
+  if (!parts.length) parts.push('<span class="muted">Ingen helseregistrering</span>');
+  return `<div><b>${esc(cap1(shortDate(d)))}</b><br>${parts.join('<br>')}</div>` + (d <= todayStr() ? `<button class="linkbtn" data-act="editday" data-day="${d}">${I.edit} Rediger dag</button>` : '');
+}
+function forgetCard(mode, days, label, month, labels, today) {
+  const evN = d => d > today ? 0 : state.health.events.filter(e => e.day === d).length;
+  const tot = days.reduce((n, d) => n + evN(d), 0), T = 'Glemt og mistet';
+  if (mode === 'grid') {
+    let sum = 0;
+    const cells = days.map(d => {
+      if (d > today) return `<td><button class="cell na" tabindex="-1" aria-disabled="true"></button></td>`;
+      const c = evN(d); sum += c;
+      return `<td><button class="cell ${c ? 'ev' + Math.min(3, c) : 'none'}" data-act="hcell" data-sec="ev" data-d="${d}" aria-label="${T}, ${esc(shortDate(d))}: ${c ? c + ' ganger' : 'ingen'}">${c ? c : ''}</button></td>`;
+    }).join('');
+    return `<section class="card"><h2>${T} <span class="badge">${tot} totalt</span></h2><p class="stat">Tall = antall ganger du loggførte en hendelse. Trykk på en rute for detaljer.${month ? ' Sveip sideveis for hele måneden.' : ''}</p>
+    <div class="gwrap"><table class="gt ${month ? 'm' : 'w'}"><caption class="sr">${T}, ${esc(label)}</caption><thead><tr><th class="rn" scope="col"><span class="sr">Rad</span></th>${days.map(d => { const dt = parse(d); return `<th scope="col" class="${d === today ? 'today' : ''}">${month ? '' : DAYS3[dt.getDay()] + '<br>'}${dt.getDate()}</th>`; }).join('')}<th scope="col" title="Totalt">Σ</th></tr></thead>
+    <tbody><tr><th class="rn" scope="row">Hendelser</th>${cells}<td class="sum">${sum}</td></tr></tbody></table></div>
+    <div class="cap" id="cap-hc-ev" aria-live="polite" style="align-items:flex-start;margin-top:8px"><span class="muted">Trykk på en rute for detaljer.</span></div></section>`;
+  }
+  const gv = days.map(d => d > today ? null : evN(d));
+  const gtips = days.map((d, i) => cap1(shortDate(d)) + ': ' + (d > today ? 'fremtiden' : gv[i] + ' hendelse' + (gv[i] === 1 ? '' : 'r')));
+  chartTips.hg = { days, tips: gtips, rows: days.map(hDayHtml) };
+  return `<section class="card"><h2>${T} <span class="badge">${tot} totalt</span></h2><p class="stat">Antall hendelser per dag.</p>`
+    + chartSVG({ k:'hg', tips: gtips, aria: `${T}, ${label}. ${tot} totalt` }, gv, labels, 'bar', 'var(--c3)', Object.assign(niceAxis(Math.max(1, ...gv.filter(v => v != null))), { pct:false }), month)
+    + `<div class="cap" id="cap-hg" aria-live="polite" style="align-items:flex-start"><span class="muted">Trykk på en dag for detaljer.</span></div></section>`;
+}
+function healthTrends(days, label, month, labels, today) {
+  chartTips = {};
+  const H = state.health, M = metricDefs(), line = state.prefs.hkind === 'line';
+  const ciOf = d => d > today ? null : (H.checkins[d] || null);
+  const have = days.filter(d => ciOf(d)), evN = d => d > today ? 0 : H.events.filter(e => e.day === d).length;
+  const evTot = days.reduce((s, d) => s + evN(d), 0);
+  if (!have.length && !evTot) return `<section class="card empty"><h2 style="justify-content:center">Ingen helsedata i denne perioden</h2><p class="muted">Sjekk inn under «I dag» for å bygge opp trendene.</p></section>`;
+  const head = d => { const dt = parse(d); return `<th scope="col" class="${d === today ? 'today' : ''}">${month ? '' : DAYS3[dt.getDay()] + '<br>'}${dt.getDate()}</th>`; };
+  const cell = (sec, d, cls, inner, aria) => `<td><button class="cell ${cls}" data-act="hcell" data-sec="${sec}" data-d="${d}" aria-label="${esc(aria)}" ${cls === 'na' ? 'tabindex="-1" aria-disabled="true"' : ''}>${inner}</button></td>`;
+  const tbl = (sec, title, badge, note, rows, sh) => `<section class="card"><h2>${title}${badge ? ` <span class="badge">${badge}</span>` : ''}</h2><p class="stat">${note}${month ? ' Sveip sideveis for hele måneden.' : ''}</p>
+    <div class="gwrap"><table class="gt ${month ? 'm' : 'w'}"><caption class="sr">${esc(title)}, ${esc(label)}</caption><thead><tr><th class="rn" scope="col"><span class="sr">Rad</span></th>${days.map(head).join('')}<th scope="col" title="${sh[1]}">${sh[0]}</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><th class="rn" scope="row">${esc(r.n)}</th>${r.cells.join('')}<td class="sum">${r.sum}</td></tr>`).join('')}</tbody></table></div>
+    <div class="cap" id="cap-hc-${sec}" aria-live="polite" style="align-items:flex-start;margin-top:8px"><span class="muted">Trykk på en rute for detaljer.</span></div></section>`;
+  let h = '';
+  if (!line) {
+    const rows = M.map(m => {
+      let s = 0, n = 0;
+      const cells = days.map(d => {
+        if (d > today) return cell('ci', d, 'na', '', shortDate(d));
+        const ci = ciOf(d), v = ci && ci[m.k] != null ? ci[m.k] : null;
+        if (v == null) return cell('ci', d, 'none', '', `${m.n}, ${shortDate(d)}: ikke registrert`);
+        s += v; n++;
+        return cell('ci', d, m.cls(v), month ? String(v) : m.ic(v), `${m.n}, ${shortDate(d)}: ${m.lab(v)}`);
+      });
+      return { n: m.n, cells, sum: fmtAvg(n ? s / n : null) };
+    });
+    h += tbl('ci', 'Innsjekk', `${have.length} dag${have.length === 1 ? '' : 'er'}`, 'Farge og tegn viser nivå: rød/oransje = lavt, grått = midt, grønt = høyt. Σ = snitt.', rows, ['Σ', 'Snitt']);
+    if (H.symptoms.length) {
+      const srows = H.symptoms.map(sy => {
+        let n = 0;
+        const cells = days.map(d => {
+          if (d > today) return cell('sy', d, 'na', '', shortDate(d));
+          const ci = ciOf(d); if (!ci) return cell('sy', d, 'none', '', `${sy.name}, ${shortDate(d)}: ikke registrert`);
+          const v = ci.sym && ci.sym[sy.id];
+          if (v) { n++; return cell('sy', d, 'sv' + v, String(v), `${sy.name}, ${shortDate(d)}: ${SYMSEV[v].toLowerCase()}`); }
+          return cell('sy', d, 'free', month ? '' : I.check, `${sy.name}, ${shortDate(d)}: ingen`);
+        });
+        return { n: sy.name, cells, sum: n };
+      });
+      h += tbl('sy', 'Symptomer', '', 'Tall = styrke (1 lett, 2 middels, 3 sterk). Hake = innsjekk uten symptomet. Σ = dager med symptomet.', srows, ['Σ', 'Dager med symptom']);
+    }
+    h += forgetCard('grid', days, label, month, labels, today);
+  } else {
+    const norm = (m, v) => m.k === 'focus' ? (v - 1) * 2 : m.k === 'energy' ? (v - 1) * 4 / 3 : v - 1;
+    const all = M.map((m, i) => ({ id: 'hm_' + m.k, n: m.n, idx: i, vals: days.map(d => { const ci = ciOf(d); return ci && ci[m.k] != null ? norm(m, ci[m.k]) : null; }) }));
+    const vis = all.filter(x => !ui.hide[x.id]).map((x, slot) => Object.assign({}, x, { slot }));
+    const tips = days.map(d => { const ci = ciOf(d); return cap1(shortDate(d)) + ': ' + (ci ? M.filter(m => ci[m.k] != null).map(m => m.n + ' ' + m.lab(ci[m.k]).toLowerCase()).join('; ') || 'ingen verdier' : d > today ? 'fremtiden' : 'ingen innsjekk'); });
+    chartTips.hl = { days, tips, rows: days.map(hDayHtml) };
+    h += `<section class="card"><h2>Innsjekk <span class="badge">${have.length} dag${have.length === 1 ? '' : 'er'}</span></h2><p class="stat">Lav til høy. Trykk på navnene for å skjule/vise linjer.</p>`
+      + (vis.length ? multiLineSVG('hl', vis, labels, { top:4, ticks:[0,2,4], fmt: t => ({ 0:'Lav', 2:'Middels', 4:'Høy' })[t] }, month, `Innsjekk, ${label}`, tips) : `<p class="muted">Alle linjer er skjult.</p>`)
+      + `<div class="legend">${all.map(x => `<button data-act="legend" data-id="${x.id}" aria-pressed="${!ui.hide[x.id]}">${legendMark(x.idx)}${esc(x.n)}</button>`).join('')}</div>`
+      + `<div class="cap" id="cap-hl" aria-live="polite" style="align-items:flex-start;margin-top:10px"><span class="muted">Trykk på en dag for detaljer.</span></div></section>`;
+    if (H.symptoms.length) {
+      const sall = H.symptoms.map((sy, i) => ({ id: 'hs_' + sy.id, n: sy.name, idx: i, vals: days.map(d => { const ci = ciOf(d); return ci ? ((ci.sym && ci.sym[sy.id]) || 0) : null; }) }));
+      const svis = sall.filter(x => !ui.hide[x.id]).map((x, slot) => Object.assign({}, x, { slot }));
+      const stips = days.map(d => { const ci = ciOf(d); return cap1(shortDate(d)) + ': ' + (ci ? H.symptoms.map(sy => sy.name + ' ' + SYMSEV[(ci.sym && ci.sym[sy.id]) || 0].toLowerCase()).join('; ') : d > today ? 'fremtiden' : 'ingen innsjekk'); });
+      chartTips.hs = { days, tips: stips, rows: days.map(hDayHtml) };
+      h += `<section class="card"><h2>Symptomer</h2><p class="stat">Styrke per dag. Trykk på navnene for å skjule/vise linjer.</p>`
+        + (svis.length ? multiLineSVG('hs', svis, labels, { top:3, ticks:[0,1,2,3], fmt: t => SYMSEV[t] }, month, `Symptomer, ${label}`, stips) : `<p class="muted">Alle linjer er skjult.</p>`)
+        + `<div class="legend">${sall.map(x => `<button data-act="legend" data-id="${x.id}" aria-pressed="${!ui.hide[x.id]}">${legendMark(x.idx)}${esc(x.n)}</button>`).join('')}</div>`
+        + `<div class="cap" id="cap-hs" aria-live="polite" style="align-items:flex-start;margin-top:10px"><span class="muted">Trykk på en dag for detaljer.</span></div></section>`;
+    }
+    h += forgetCard('bar', days, label, month, labels, today);
+  }
+  const cnt = {}; have.forEach(d => (getCI(d).tags || []).forEach(t => { cnt[t] = (cnt[t] || 0) + 1; }));
+  const tagsUsed = Object.keys(cnt);
+  if (tagsUsed.length) {
+    h += `<section class="card"><h2>Humørtagger</h2><p class="stat">Hvor mange dager hver tagg er brukt i perioden.</p>`;
+    Object.keys(CLUSTERS).forEach(k => {
+      const ts = H.tags.filter(t => t.cl === k && cnt[t.id]).sort((a, b) => cnt[b.id] - cnt[a.id]);
+      if (ts.length) h += `<div class="ctitle">${CLUSTERS[k].n}</div><div class="chiprow gc-${CLUSTERS[k].c}">${ts.map(t => `<span class="chipt">${esc(t.name)} ×${cnt[t.id]}</span>`).join('')}</div>`;
+    });
+    h += `</section>`;
+  }
+  return h;
+}
+
 function renderTrends() {
   const { days, label, sub } = periodDays();
   const month = state.prefs.range === 'month', kind = state.prefs.kind, today = todayStr();
@@ -563,17 +806,21 @@ function renderTrends() {
   const btot = bnum.reduce((a,b)=>a+b,0);
   const bmax = Math.max(1, ...bnum);
   const canNext = ui.offset < 0;
-  let h = `<div class="top"><h1>Trender</h1></div><div class="controls">
+  const isHealth = showHealth() && state.prefs.tsec === 'health';
+  const secSeg = showHealth() ? `<div class="seg" role="group" aria-label="Område"><button data-act="tsec" data-s="habits" aria-pressed="${!isHealth}">Vaner og uvaner</button><button data-act="tsec" data-s="health" aria-pressed="${isHealth}">Helse</button></div>` : '';
+  const kindSeg = isHealth ? `<div class="seg" role="group" aria-label="Visning"><button data-act="hkind" data-k="grid" aria-pressed="${state.prefs.hkind !== 'line'}">Ruter</button><button data-act="hkind" data-k="line" aria-pressed="${state.prefs.hkind === 'line'}">Linje</button></div>` : `<div class="seg" role="group" aria-label="Diagramtype">
+      <button data-act="kind" data-k="bar" aria-pressed="${kind==='bar'}">Stolper</button>
+      <button data-act="kind" data-k="line" aria-pressed="${kind==='line'}">Linje</button>
+      <button data-act="kind" data-k="grid" aria-pressed="${kind==='grid'}">Ruter</button></div>`;
+  let h = `<div class="top"><h1>Trender</h1></div><div class="controls">${secSeg}
     <div class="seg" role="group" aria-label="Periode">
       <button data-act="range" data-r="week" aria-pressed="${!month}">7 dager</button>
       <button data-act="range" data-r="month" aria-pressed="${month}">Måned</button></div>
     <div class="nav"><button class="iconbtn" data-act="off" data-d="-1" aria-label="${month?'Forrige måned':'Forrige uke'}">${I.left}</button>
       <div class="lbl">${esc(label)}${sub && ui.offset===0 ? `<div class="muted" style="font-weight:400;font-size:.8rem">${esc(sub)}</div>` : ''}</div>
       <button class="iconbtn" data-act="off" data-d="1" aria-label="${month?'Neste måned':'Neste uke'}" ${canNext?'':'disabled'}>${I.right}</button></div>
-    <div class="seg" role="group" aria-label="Diagramtype">
-      <button data-act="kind" data-k="bar" aria-pressed="${kind==='bar'}">Stolper</button>
-      <button data-act="kind" data-k="line" aria-pressed="${kind==='line'}">Linje</button>
-      <button data-act="kind" data-k="grid" aria-pressed="${kind==='grid'}">Ruter</button></div></div>`;
+    ${kindSeg}</div>`;
+  if (isHealth) return h + healthTrends(days, label, month, labels, today);
 
   if (kind === 'grid') {
     const cellOf = (a, d) => {
@@ -612,6 +859,7 @@ function renderTrends() {
     };
     mk('Vaner', 'habit', false);
     mk('Uvaner', 'bad', true);
+    if (showHealth() && state.health.events.length) h += forgetCard('grid', days, label, month, labels, today);
     return h;
   }
   if (kind === 'line') {
@@ -661,6 +909,7 @@ function renderTrends() {
     };
     group('Vaner', orderedAll('habit'), false);
     group('Uvaner', orderedAll('bad'), true);
+    if (showHealth() && state.health.events.length) h += forgetCard('bar', days, label, month, labels, today);
     return h;
   }
   h += `<section class="card"><h2>Vaner <span class="badge">${havg==null?'–':'snitt '+havg+' %'}</span></h2>
@@ -673,7 +922,9 @@ function renderTrends() {
   if (!state.activities.some(a => a.type === 'bad')) h += `<p class="muted">Ingen uvaner lagt til ennå.</p>`;
   else h += chartSVG({k:'b', tips:bTips, aria:`Uvaner, ${label}. ${btot} registrert totalt`}, bv, labels, kind, 'var(--bad)', Object.assign(niceAxis(bmax), {pct:false}), month)
     + `<div class="cap" id="cap-b" aria-live="polite"><span class="muted">Trykk på en dag for detaljer.</span></div>`;
-  return h + `</section>`;
+  h += `</section>`;
+  if (showHealth() && state.health.events.length) h += forgetCard('bar', days, label, month, labels, today);
+  return h;
 }
 
 /* --- Aktiviteter --- */
@@ -716,16 +967,104 @@ function renderActs() {
     `<div class="item"><button class="main" data-act="edit" data-id="${a.id}" aria-label="Åpne ${esc(a.name)}"><span class="dot ${a.type==='bad'?'bad':''}"></span>
       <span style="flex:1;overflow-wrap:anywhere"><b>${esc(a.name)}</b><span class="muted"> · ${a.type==='bad'?'uvane':'vane'}</span></span></button>
       <button class="btn sm" data-act="restore" data-id="${a.id}">Gjenopprett</button></div>`).join('') + `</div></section>`;
+  h += healthActsCard();
   h += `<section class="card"><h2>Daglig påminnelse</h2>
     <p class="note" style="margin-top:0">En nettapp kan ikke sende varsler pålitelig. Legg i stedet en gjentakende hendelse med alarm i kalenderen på telefonen.</p>
     <label class="f" for="rtime">Klokkeslett</label><input id="rtime" class="txt" type="time" value="${esc(state.meta.remindTime || '20:00')}">
     <button class="btn block" style="margin-top:10px" data-act="ics">Legg til i kalender</button></section>`;
   h += `<section class="card"><h2>Sikkerhetskopi</h2>
-    <p class="note" style="margin-top:0">Appversjon 12. Alt lagres kun i denne nettleseren på denne enheten. Tømmer du nettleserdata, forsvinner loggen. ${state.meta.lastBackup ? 'Sist sikkerhetskopi: ' + esc(shortDate(state.meta.lastBackup)) + '.' : 'Du har ikke tatt sikkerhetskopi ennå.'}</p>
+    <p class="note" style="margin-top:0">Appversjon 14. Alt lagres kun i denne nettleseren på denne enheten. Tømmer du nettleserdata, forsvinner loggen. Filen inneholder også helsedata, så oppbevar den trygt. ${state.meta.lastBackup ? 'Sist sikkerhetskopi: ' + esc(shortDate(state.meta.lastBackup)) + '.' : 'Du har ikke tatt sikkerhetskopi ennå.'}</p>
     <div style="margin-top:12px"><button class="btn block" data-act="export">Lagre sikkerhetskopi</button>
     <button class="btn block" data-act="import">Gjenopprett fra fil</button></div></section>`;
   return h;
 }
+
+/* --- Helse: ark --- */
+function scale(title, f, opts, cur) {
+  return `<div class="sc n${opts.length}" role="group" aria-label="${esc(title)}">` + opts.map(o => `<button class="${o.cls}" data-act="cset" data-f="${f}" data-v="${o.v}" aria-pressed="${cur === o.v}">${o.ic}<span>${esc(o.l)}</span></button>`).join('') + `</div>`;
+}
+function tagChips(cls, ci) {
+  return cls.map(k => {
+    const ts = state.health.tags.filter(t => t.cl === k); if (!ts.length) return '';
+    return `<div class="chips gc-${CLUSTERS[k].c}" role="group" aria-label="${CLUSTERS[k].n}" style="margin-bottom:6px">${ts.map(t => `<button data-act="ctag" data-id="${t.id}" aria-pressed="${(ci.tags || []).includes(t.id)}">${esc(t.name)}</button>`).join('')}</div>`;
+  }).join('');
+}
+function renderCheckinSheet() {
+  const day = ui.ci; if (!day) return '';
+  const ci = getCI(day) || {}, H = state.health;
+  const mk = (k, n) => metricDefs().find(m => m.k === k);
+  const opts = (m, vals) => vals.map(v => ({ v, l: m.lab(v), ic: m.ic(v).replace(/width="18" height="18"/, 'width="28" height="28"'), cls: m.cls(v) }));
+  const M = {}; metricDefs().forEach(m => { M[m.k] = m; });
+  let h = `<div class="overlay" data-act="closec"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="ch">
+    <h2 id="ch">Innsjekk</h2><p class="muted" style="margin:-6px 0 4px">${esc(cap1(longDate(day)))}. Alt lagres med en gang.</p>
+    <div class="ctitle">Hvordan har du det totalt?</div>${scale('Humør', 'mood', opts(M.mood, [1,2,3,4,5]), ci.mood)}
+    <div class="ctitle">Hva beskriver humøret? (valgfritt)</div>`;
+  h += tagChips(['pos','neu','neg','pat'], ci);
+  h += `<button class="linkbtn" data-act="hlist" data-k="tag">Rediger tagger</button>
+    <div class="ctitle">Energi</div>${scale('Energi', 'energy', opts(M.energy, [1,2,3,4]), ci.energy)}
+    <div class="ctitle">Fokus</div>${scale('Fokus', 'focus', opts(M.focus, [1,2,3]), ci.focus)}
+    <div class="ctitle">Hvordan føltes det sosiale?</div>${scale('Sosialt', 'social', opts(M.social, [1,2,3,4,5]), ci.social)}
+    <div class="ctitle">Hva beskriver det? (valgfritt)</div>${tagChips(['sit','sos'], ci)}
+    <div class="ctitle">Egne symptomer</div>`;
+  if (!H.symptoms.length) h += `<p class="note" style="margin:0">Ingen symptomer lagt til ennå.</p>`;
+  else h += H.symptoms.map(s => `<div class="symrow"><div class="symn">${esc(s.name)}</div><div class="seg sm" role="group" aria-label="${esc(s.name)}">${symVals(s).map(v => `<button data-act="csym" data-id="${s.id}" data-v="${v}" aria-pressed="${((ci.sym && ci.sym[s.id]) || 0) === v}">${SYMSEV[v]}</button>`).join('')}</div></div>`).join('');
+  h += `<button class="linkbtn" data-act="hlist" data-k="sym">Rediger symptomer</button>
+    <label class="f" for="c-note">Notat for dagen</label>
+    <textarea id="c-note" class="txt" maxlength="1500" placeholder="Hva påvirket dagen? Søvn, medisiner, hendelser …">${esc(ci.note || '')}</textarea>
+    <div style="margin-top:14px"><button class="btn primary block" data-act="closec">Ferdig</button>
+    ${getCI(day) ? `<button class="btn danger block" data-act="cclear">Nullstill innsjekk</button>` : ''}</div></div></div>`;
+  return h;
+}
+function renderEventSheet() {
+  const e = ui.ev; if (!e) return '';
+  return `<div class="overlay" data-act="closee"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="eh">
+    <h2 id="eh">${e.id ? 'Rediger hendelse' : 'Logg glemt eller mistet'}</h2><p class="muted" style="margin:-6px 0 10px">${esc(cap1(longDate(e.day)))}</p>
+    <label class="f" for="e-text">Hva skjedde?</label>
+    <input id="e-text" class="txt" type="text" maxlength="120" value="${esc(e.text)}" placeholder="F.eks. glemte avtalen kl. 14, lette etter nøklene" autocomplete="off">
+    <label class="f" id="ecl">Type (valgfritt)</label>
+    <div class="chips gc-purple" role="group" aria-labelledby="ecl">${FCATS.map(c => `<button data-act="ecat" data-c="${esc(c)}" aria-pressed="${e.cat === c}">${esc(c)}</button>`).join('')}</div>
+    <label class="f" for="e-ctx">Situasjon (valgfritt)</label>
+    <input id="e-ctx" class="txt" type="text" maxlength="200" value="${esc(e.ctx)}" placeholder="F.eks. stresset, dårlig søvn, midt i noe annet" autocomplete="off">
+    ${e.err ? `<p class="note" style="color:var(--danger)" role="alert">${esc(e.err)}</p>` : ''}
+    <div style="margin-top:16px"><button class="btn primary block" data-act="evsave">Lagre</button><button class="btn block" data-act="closee">Avbryt</button>
+    ${e.id ? `<button class="btn danger block" data-act="evdelete">Slett</button>` : ''}</div></div></div>`;
+}
+function renderHListSheet() {
+  const k = ui.hl; if (!k) return '';
+  const H = state.health, isTag = k === 'tag';
+  let list = '';
+  if (isTag) Object.keys(CLUSTERS).forEach(c => { const ts = H.tags.filter(t => t.cl === c); if (ts.length) list += `<div class="ctitle">${CLUSTERS[c].n}</div>` + ts.map(t => `<button class="hrow" data-act="hedit" data-id="${t.id}"><b>${esc(t.name)}</b></button>`).join(''); });
+  else list = H.symptoms.map(s => `<button class="hrow" data-act="hedit" data-id="${s.id}"><b>${esc(s.name)}</b></button>`).join('') || `<p class="note">Ingen symptomer ennå. Legg til for eksempel hodepine, kvalme eller verk.</p>`;
+  return `<div class="overlay" data-act="closehl"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="hlh">
+    <div class="ghd"><h2 id="hlh" style="margin:0">${isTag ? 'Humørtagger' : 'Egne symptomer'}</h2><button class="btn sm primary" data-act="hnew">+ Ny</button></div>${list}
+    <div style="margin-top:14px"><button class="btn block" data-act="closehl">Ferdig</button></div></div></div>`;
+}
+function renderHItemSheet() {
+  const x = ui.hi; if (!x) return '';
+  const isTag = x.kind === 'tag';
+  return `<div class="overlay" data-act="closehi"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="hih">
+    <h2 id="hih">${x.id ? 'Rediger' : 'Ny'} ${isTag ? 'tagg' : 'symptom'}</h2>
+    <label class="f" for="h-name">Navn</label><input id="h-name" class="txt" type="text" maxlength="40" value="${esc(x.name)}" autocomplete="off">
+    ${!isTag ? `<label class="f" id="hlv">Skala for styrke</label><div class="chips" role="group" aria-labelledby="hlv"><button data-act="hlv" data-v="4" aria-pressed="${x.lv !== 3}">Ingen – Lett – Middels – Sterk</button><button data-act="hlv" data-v="3" aria-pressed="${x.lv === 3}">Ingen – Lett – Sterk</button></div>` : ''}
+    ${isTag ? `<label class="f" id="hcl">Gruppe</label><div class="chips" role="group" aria-labelledby="hcl">${Object.keys(CLUSTERS).map(c => `<button class="gc-${CLUSTERS[c].c}" data-act="hcl" data-c="${c}" aria-pressed="${x.cl === c}">${CLUSTERS[c].n}</button>`).join('')}</div>` : ''}
+    ${x.err ? `<p class="note" style="color:var(--danger)" role="alert">${esc(x.err)}</p>` : ''}
+    <div style="margin-top:16px"><button class="btn primary block" data-act="hsave">Lagre</button><button class="btn block" data-act="closehi">Avbryt</button>
+    ${x.id ? (x.confirm ? `<button class="btn danger block" data-act="hdelete">Trykk igjen for å slette (fjernes også fra tidligere innsjekker)</button>` : `<button class="btn danger block" data-act="hdeleteask">Slett</button>`) : ''}</div></div></div>`;
+}
+function healthActsCard() {
+  const H = state.health;
+  if (!showHealth()) return `<section class="card"><h2>Helse</h2><p class="note" style="margin-top:0">Helsedelen er skjult. Dataene dine beholdes.</p><button class="btn block" data-act="toggleHealth">Vis helse</button></section>`;
+  return `<section class="card"><h2>Helse</h2><p class="note" style="margin-top:0">Tilpass taggene du kan velge mellom i innsjekken, og legg til symptomer du vil følge.</p>
+    <button class="btn block" data-act="hlist" data-k="tag">Humørtagger (${H.tags.length})</button>
+    <button class="btn block" data-act="hlist" data-k="sym">Egne symptomer (${H.symptoms.length})</button>
+    <button class="btn block" data-act="toggleHealth">Skjul helse</button></section>`;
+}
+function syncCN() {
+  const t = document.getElementById('c-note'); if (!t || !ui.ci) return;
+  if (t.value !== ((getCI(ui.ci) || {}).note || '')) updCI(ui.ci, c => { if (t.value.trim()) c.note = t.value; else delete c.note; });
+}
+function syncEv() { if (!ui.ev) return; const a = document.getElementById('e-text'), b = document.getElementById('e-ctx'); if (a) ui.ev.text = a.value; if (b) ui.ev.ctx = b.value; }
+function syncHi() { const f = document.getElementById('h-name'); if (f && ui.hi) ui.hi.name = f.value; }
 
 /* --- Redigeringsark --- */
 function renderSheet() {
@@ -803,7 +1142,9 @@ function renderGroupSheet() {
 function render() {
   renderTabs();
   const app = document.getElementById('app');
-  app.innerHTML = (ui.tab === 'today' ? renderToday() : ui.tab === 'trends' ? renderTrends() : renderActs()) + renderSheet() + renderGroupSheet() + renderNoteSheet();
+  const tops = {}; document.querySelectorAll('.sheet').forEach(sh => { tops[sh.getAttribute('aria-labelledby')] = sh.scrollTop; });
+  app.innerHTML = (ui.tab === 'today' ? renderToday() : ui.tab === 'trends' ? renderTrends() : renderActs()) + renderSheet() + renderGroupSheet() + renderNoteSheet() + renderCheckinSheet() + renderEventSheet() + renderHListSheet() + renderHItemSheet();
+  document.querySelectorAll('.sheet').forEach(sh => { const t = tops[sh.getAttribute('aria-labelledby')]; if (t) sh.scrollTop = t; });
   document.querySelectorAll('.gwrap').forEach(w => {   // rull månedsruter slik at i dag er synlig
     const t = w.querySelector('th.today');
     if (t && w.scrollWidth > w.clientWidth) w.scrollLeft = Math.max(0, t.getBoundingClientRect().left - w.getBoundingClientRect().left + w.scrollLeft - w.clientWidth / 2);
@@ -850,8 +1191,56 @@ function download(name, text) {
 document.addEventListener('click', ev => {
   const el = ev.target.closest('[data-act]'); if (!el) return;
   const act = el.dataset.act, id = el.dataset.id;
+  if (ui.ci) syncCN();
   switch (act) {
-    case 'tab': ui.tab = el.dataset.tab; ui.edit = null; ui.gedit = null; ui.note = null; render(); window.scrollTo(0,0); break;
+    case 'tsec': state.prefs.tsec = el.dataset.s; save(); render(); break;
+    case 'hkind': state.prefs.hkind = el.dataset.k; save(); render(); break;
+    case 'hcell': {
+      const d = el.dataset.d; document.querySelectorAll('.cell.sel').forEach(r => r.classList.remove('sel')); el.classList.add('sel');
+      const cap = document.getElementById('cap-hc-' + el.dataset.sec); if (cap) cap.innerHTML = hDayHtml(d); break; }
+    case 'ci': ui.ci = ui.day; render(); break;
+    case 'closec': if (el.classList.contains('overlay') && ev.target !== el) break; ui.ci = null; render(); break;
+    case 'cset': { const f = el.dataset.f, v = +el.dataset.v; updCI(ui.ci, c => { if (c[f] === v) delete c[f]; else c[f] = v; }); render(); break; }
+    case 'ctag': updCI(ui.ci, c => { const a = c.tags = c.tags || [], i = a.indexOf(id); if (i >= 0) a.splice(i, 1); else a.push(id); }); render(); break;
+    case 'csym': { const v = +el.dataset.v; updCI(ui.ci, c => { c.sym = c.sym || {}; if (v) c.sym[id] = v; else delete c.sym[id]; }); render(); break; }
+    case 'cclear': { const day = ui.ci, snap = JSON.parse(JSON.stringify(getCI(day) || {})); delete state.health.checkins[day]; save(); ui.ci = null; render();
+      toast('Innsjekken er nullstilt', () => { state.health.checkins[day] = snap; save(); render(); }); break; }
+    case 'evnew': ui.ev = { id:null, day:ui.day, text:'', cat:null, ctx:'' }; render(); { const t = document.getElementById('e-text'); if (t) t.focus(); } break;
+    case 'evedit': { const e = state.health.events.find(x => x.id === id); if (e) { ui.ev = { id:e.id, day:e.day, text:e.text, cat:e.cat || null, ctx:e.ctx || '' }; render(); } break; }
+    case 'ecat': syncEv(); ui.ev.cat = ui.ev.cat === el.dataset.c ? null : el.dataset.c; render(); break;
+    case 'closee': if (el.classList.contains('overlay') && ev.target !== el) break; ui.ev = null; render(); break;
+    case 'evsave': {
+      syncEv(); const e = ui.ev, text = e.text.trim();
+      if (!text) { e.err = 'Skriv hva som skjedde.'; render(); break; }
+      if (e.id) { const x = state.health.events.find(y => y.id === e.id); x.text = text; x.cat = e.cat; x.ctx = e.ctx.trim(); }
+      else state.health.events.push({ id: uid(), day: e.day, type:'forget', text, cat: e.cat, ctx: e.ctx.trim(), ts: Date.now() });
+      save(); ui.ev = null; render(); break; }
+    case 'evdelete': { const x = state.health.events.find(y => y.id === ui.ev.id); state.health.events = state.health.events.filter(y => y !== x); save(); ui.ev = null; render();
+      toast('Slettet', () => { state.health.events.push(x); save(); render(); }); break; }
+    case 'hlist': ui.hl = el.dataset.k; render(); break;
+    case 'closehl': if (el.classList.contains('overlay') && ev.target !== el) break; ui.hl = null; render(); break;
+    case 'hnew': ui.hi = { kind: ui.hl, id:null, name:'', cl:'pos', lv:4 }; render(); { const t = document.getElementById('h-name'); if (t) t.focus(); } break;
+    case 'hedit': { const isTag = ui.hl === 'tag', x = (isTag ? tagById(id) : symById(id)); if (x) { ui.hi = { kind: ui.hl, id:x.id, name:x.name, cl:x.cl || 'pos', lv:x.lv === 3 ? 3 : 4 }; render(); } break; }
+    case 'hlv': syncHi(); ui.hi.lv = +el.dataset.v; render(); break;
+    case 'hcl': syncHi(); ui.hi.cl = el.dataset.c; render(); break;
+    case 'closehi': if (el.classList.contains('overlay') && ev.target !== el) break; ui.hi = null; render(); break;
+    case 'hsave': {
+      syncHi(); const x = ui.hi, name = x.name.trim(), isTag = x.kind === 'tag', list = isTag ? state.health.tags : state.health.symptoms;
+      if (!name) { x.err = 'Skriv inn et navn.'; render(); break; }
+      if (list.some(y => y.id !== x.id && y.name.toLowerCase() === name.toLowerCase())) { x.err = 'Det finnes allerede en med dette navnet.'; render(); break; }
+      if (x.id) { const y = list.find(z => z.id === x.id); y.name = name; if (isTag) y.cl = x.cl; else if (x.lv === 3) { if (y.lv !== 3) { y.lv = 3; Object.keys(state.health.checkins).forEach(d => { const sy = state.health.checkins[d].sym; if (sy && sy[y.id] === 2) sy[y.id] = 3; }); } } else delete y.lv; }
+      else list.push(isTag ? { id: uid(), name, cl: x.cl } : { id: uid(), name, lv: x.lv === 3 ? 3 : undefined });
+      save(); ui.hi = null; render(); break; }
+    case 'hdeleteask': syncHi(); ui.hi.confirm = true; render(); break;
+    case 'hdelete': {
+      const x = ui.hi, snap = JSON.stringify(state.health), isTag = x.kind === 'tag', H = state.health;
+      if (isTag) { H.tags = H.tags.filter(t => t.id !== x.id); Object.keys(H.checkins).forEach(d => { const c = H.checkins[d]; if (c.tags) c.tags = c.tags.filter(t => t !== x.id); }); }
+      else { H.symptoms = H.symptoms.filter(s => s.id !== x.id); Object.keys(H.checkins).forEach(d => { const c = H.checkins[d]; if (c.sym) delete c.sym[x.id]; }); }
+      Object.keys(H.checkins).forEach(d => { const c = H.checkins[d]; if (c.tags && !c.tags.length) delete c.tags; if (c.sym && !Object.keys(c.sym).length) delete c.sym; if (ciEmpty(c)) delete H.checkins[d]; });
+      save(); ui.hi = null; render();
+      toast('Slettet', () => { state.health = JSON.parse(snap); save(); render(); }); break; }
+    case 'toggleHealth': state.prefs.showHealth = !showHealth(); if (!showHealth()) state.prefs.tsec = 'habits'; save(); render(); break;
+    case 'tab': ui.tab = el.dataset.tab; ui.edit = null; ui.gedit = null; ui.note = null; ui.ci = ui.ev = ui.hl = ui.hi = null; render(); window.scrollTo(0,0); break;
     case 'day': { const nd = ymd(addDays(parse(ui.day), +el.dataset.d)); if (nd <= todayStr()) { ui.day = nd; render(); } break; }
     case 'gotoday': ui.day = todayStr(); render(); break;
     case 'pickdate': { const p = document.getElementById('datePick'); p.max = todayStr(); p.value = ui.day;
@@ -861,8 +1250,9 @@ document.addEventListener('click', ev => {
     case 'dec': setCount(id, ui.day, getCount(id, ui.day) - 1); render(); break;
     case 'clearday': {
       const snap = JSON.parse(JSON.stringify(state.logs[ui.day] || {})), nsnap = JSON.parse(JSON.stringify(state.notes[ui.day] || {})), day = ui.day;
-      delete state.logs[day]; delete state.notes[day]; save(); render();
-      toast('Loggen for ' + shortDate(day) + ' er slettet', () => { if (Object.keys(snap).length) state.logs[day] = snap; if (Object.keys(nsnap).length) state.notes[day] = nsnap; save(); render(); });
+      const csnap = JSON.parse(JSON.stringify(state.health.checkins[day] || null)), esnap = state.health.events.filter(e => e.day === day);
+      delete state.logs[day]; delete state.notes[day]; delete state.health.checkins[day]; state.health.events = state.health.events.filter(e => e.day !== day); save(); render();
+      toast('Loggen for ' + shortDate(day) + ' er slettet', () => { if (Object.keys(snap).length) state.logs[day] = snap; if (Object.keys(nsnap).length) state.notes[day] = nsnap; if (csnap) state.health.checkins[day] = csnap; state.health.events.push(...esnap); save(); render(); });
       break; }
     case 'undo': if (toast.undo) { toast.undo(); document.getElementById('toast-root').innerHTML = ''; toast.undo = null; } break;
     case 'range': state.prefs.range = el.dataset.r; ui.offset = 0; save(); render(); break;
@@ -986,6 +1376,7 @@ document.addEventListener('click', ev => {
 document.addEventListener('change', ev => {
   const el = ev.target;
   if (el.classList.contains('cnt')) { setCount(el.dataset.id, ui.day, el.value); render(); }
+  else if (el.id === 'c-note') syncCN();
   else if (el.id === 'rtime') { state.meta.remindTime = el.value || '20:00'; save(); }
   else if (el.id === 'datePick') { if (el.value && el.value <= todayStr()) { ui.day = el.value; render(); } el.classList.add('hidden'); }
   else if (el.id === 'importFile' && el.files[0]) {
@@ -995,7 +1386,7 @@ document.addEventListener('change', ev => {
         const p = JSON.parse(r.result);
         if (!p || !Array.isArray(p.activities) || typeof p.logs !== 'object') throw 0;
         if (!confirm('Dette erstatter all eksisterende data i appen. Fortsette?')) return;
-        state = { v:1, activities:p.activities, groups:Array.isArray(p.groups) ? p.groups.map((g, i) => Object.assign({ color: COLORS[i % COLORS.length].k }, g)) : [], notes:(p.notes && typeof p.notes === 'object') ? p.notes : {}, meta:Object.assign({ lastBackup:null, snoozeUntil:null, remindTime:'20:00' }, p.meta || {}), logs:p.logs, prefs:Object.assign({range:'week',kind:'bar'}, p.prefs||{}) };
+        state = { v:1, activities:p.activities, groups:Array.isArray(p.groups) ? p.groups.map((g, i) => Object.assign({ color: COLORS[i % COLORS.length].k }, g)) : [], notes:(p.notes && typeof p.notes === 'object') ? p.notes : {}, meta:Object.assign({ lastBackup:null, snoozeUntil:null, remindTime:'20:00' }, p.meta || {}), logs:p.logs, health: normHealth(p.health), prefs:Object.assign({range:'week',kind:'bar'}, p.prefs||{}) };
         save(); ui.offset = 0; render(); toast('Sikkerhetskopi gjenopprettet');
       } catch(e) { alert('Filen ser ikke ut som en gyldig sikkerhetskopi fra Vanelogg.'); }
     };
@@ -1003,7 +1394,13 @@ document.addEventListener('change', ev => {
   }
 });
 document.addEventListener('keydown', ev => {
-  if (ev.key === 'Escape' && (ui.edit || ui.gedit || ui.note)) { ui.edit = null; ui.gedit = null; ui.note = null; render(); }
+  if (ev.key === 'Escape') {
+    if (ui.hi) ui.hi = null; else if (ui.hl) ui.hl = null; else if (ui.ev) ui.ev = null; else if (ui.ci) { syncCN(); ui.ci = null; }
+    else if (ui.edit || ui.gedit || ui.note) { ui.edit = null; ui.gedit = null; ui.note = null; } else return;
+    render();
+  }
+  if (ev.key === 'Enter' && ev.target.id === 'e-text') { ev.preventDefault(); document.querySelector('[data-act="evsave"]').click(); }
+  if (ev.key === 'Enter' && ev.target.id === 'h-name') { ev.preventDefault(); document.querySelector('[data-act="hsave"]').click(); }
   if (ev.key === 'Enter' && ev.target.classList.contains('cnt')) ev.target.blur();
   if (ev.key === 'Enter' && ev.target.id === 'f-name') { ev.preventDefault(); document.querySelector('[data-act="esave"]').click(); }
   if (ev.key === 'Enter' && ev.target.id === 'g-name') { ev.preventDefault(); document.querySelector('[data-act="gsave"]').click(); }
@@ -1026,7 +1423,7 @@ document.addEventListener('contextmenu', ev => { if (ev.target.closest('.qlog'))
 let sx = 0, sy = 0;
 document.addEventListener('touchstart', ev => { const t = ev.changedTouches[0]; sx = t.clientX; sy = t.clientY; }, { passive:true });
 document.addEventListener('touchend', ev => {
-  if (ui.tab !== 'today' || ui.edit || ui.gedit || ui.note || (ev.target.closest && ev.target.closest('input,textarea'))) return;
+  if (ui.tab !== 'today' || ui.edit || ui.gedit || ui.note || ui.ci || ui.ev || ui.hl || ui.hi || (ev.target.closest && ev.target.closest('input,textarea'))) return;
   const t = ev.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
   if (sx < 24) return;   // unngå konflikt med tilbake-sveip i nettleseren
   if (Math.abs(dx) > 80 && Math.abs(dy) < 50 && Math.abs(dx) > 2 * Math.abs(dy)) {
